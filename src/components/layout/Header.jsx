@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, PlusCircle, SlidersHorizontal, LayoutGrid, List, ChevronDown, X, Calendar } from 'lucide-react';
+import { Search, PlusCircle, SlidersHorizontal, LayoutGrid, List, ChevronDown, X, Calendar, RefreshCw } from 'lucide-react';
 import useBoardStore from '../../store/boardStore';
 import TaskForm from './board/TaskForm';
 
@@ -7,8 +7,12 @@ const Header = () => {
   const [isFilterExpanded, setIsFilterExpanded] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [showTaskForm, setShowTaskForm] = useState(false);
+  const [selectedFilters, setSelectedFilters] = useState({
+    priority: [],
+    status: []
+  });
   const filterRef = useRef(null);
-  const { tasks, setSearchFilter, viewMode, setViewMode } = useBoardStore();
+  const { tasks, setSearchFilter, viewMode, setViewMode, setFilters } = useBoardStore();
   
   const inProgressTasks = tasks.filter(task => task.column === 'inProgress').length;
 
@@ -34,6 +38,33 @@ const Header = () => {
 
   const toggleFilterMenu = () => {
     setIsFilterExpanded(!isFilterExpanded);
+  };
+
+  const handleFilterChange = (type, value) => {
+    setSelectedFilters(prev => {
+      const updatedFilters = {
+        ...prev,
+        [type]: prev[type].includes(value)
+          ? prev[type].filter(item => item !== value)
+          : [...prev[type], value]
+      };
+      return updatedFilters;
+    });
+  };
+
+  const applyFilters = () => {
+    setFilters('priority', selectedFilters.priority);
+    setFilters('status', selectedFilters.status);
+    setIsFilterExpanded(false);
+  };
+
+  const resetFilters = () => {
+    setSelectedFilters({
+      priority: [],
+      status: []
+    });
+    setFilters('priority', []);
+    setFilters('status', []);
   };
 
   return (
@@ -92,7 +123,11 @@ const Header = () => {
               <div className="relative" ref={filterRef}>
                 <button
                   onClick={toggleFilterMenu}
-                  className="flex items-center gap-1.5 border border-gray-300 bg-white hover:bg-gray-50 text-gray-700 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                  className={`flex items-center gap-1.5 border ${
+                    selectedFilters.priority.length > 0 || selectedFilters.status.length > 0
+                      ? 'border-blue-500 bg-blue-50 text-blue-700'
+                      : 'border-gray-300 bg-white text-gray-700'
+                  } hover:bg-gray-50 px-3 py-2 rounded-md text-sm font-medium transition-colors`}
                 >
                   <SlidersHorizontal className="h-4 w-4" />
                   <span>Filter</span>
@@ -101,46 +136,67 @@ const Header = () => {
 
                 {isFilterExpanded && (
                   <div className="absolute right-0 mt-1 w-64 bg-white rounded-md shadow-lg border border-gray-200 z-10">
-                    <div className="p-3 border-b border-gray-100">
+                    <div className="p-3 border-b border-gray-100 flex justify-between items-center">
                       <h3 className="font-semibold text-gray-700 text-sm">Filter Tasks</h3>
+                      {(selectedFilters.priority.length > 0 || selectedFilters.status.length > 0) && (
+                        <button
+                          onClick={resetFilters}
+                          className="text-sm text-gray-500 hover:text-gray-700 flex items-center gap-1"
+                        >
+                          <RefreshCw className="h-3 w-3" />
+                          Reset
+                        </button>
+                      )}
                     </div>
                     <div className="p-3">
                       <div className="mb-3">
                         <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">Priority</p>
                         <div className="space-y-1.5">
-                          <label className="flex items-center text-sm text-gray-700">
-                            <input type="checkbox" className="mr-2 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
-                            High
-                          </label>
-                          <label className="flex items-center text-sm text-gray-700">
-                            <input type="checkbox" className="mr-2 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
-                            Medium
-                          </label>
-                          <label className="flex items-center text-sm text-gray-700">
-                            <input type="checkbox" className="mr-2 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
-                            Low
-                          </label>
+                          {['high', 'medium', 'low'].map((priority) => (
+                            <label key={priority} className="flex items-center text-sm text-gray-700">
+                              <input
+                                type="checkbox"
+                                checked={selectedFilters.priority.includes(priority)}
+                                onChange={() => handleFilterChange('priority', priority)}
+                                className="mr-2 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                              />
+                              {priority.charAt(0).toUpperCase() + priority.slice(1)}
+                            </label>
+                          ))}
                         </div>
                       </div>
                       <div className="mb-3">
                         <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">Status</p>
                         <div className="space-y-1.5">
-                          <label className="flex items-center text-sm text-gray-700">
-                            <input type="checkbox" className="mr-2 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
-                            To Do
-                          </label>
-                          <label className="flex items-center text-sm text-gray-700">
-                            <input type="checkbox" className="mr-2 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
-                            In Progress
-                          </label>
-                          <label className="flex items-center text-sm text-gray-700">
-                            <input type="checkbox" className="mr-2 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
-                            Done
-                          </label>
+                          {[
+                            { id: 'todo', label: 'To Do' },
+                            { id: 'inProgress', label: 'In Progress' },
+                            { id: 'review', label: 'Review' },
+                            { id: 'done', label: 'Done' }
+                          ].map(({ id, label }) => (
+                            <label key={id} className="flex items-center text-sm text-gray-700">
+                              <input
+                                type="checkbox"
+                                checked={selectedFilters.status.includes(id)}
+                                onChange={() => handleFilterChange('status', id)}
+                                className="mr-2 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                              />
+                              {label}
+                            </label>
+                          ))}
                         </div>
                       </div>
-                      <div className="pt-2 flex justify-end border-t border-gray-100">
-                        <button className="text-sm text-blue-600 hover:text-blue-800 font-medium">
+                      <div className="pt-2 flex justify-between items-center border-t border-gray-100">
+                        <button
+                          onClick={resetFilters}
+                          className="text-sm text-gray-600 hover:text-gray-800 font-medium"
+                        >
+                          Reset All
+                        </button>
+                        <button
+                          onClick={applyFilters}
+                          className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+                        >
                           Apply Filters
                         </button>
                       </div>

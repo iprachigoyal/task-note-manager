@@ -19,7 +19,7 @@ const priorityConfig = {
 
 const TaskCard = ({ task }) => {
   const [showDetails, setShowDetails] = useState(false);
-  const { deleteTask } = useBoardStore();
+  const { deleteTask, moveTask, columns } = useBoardStore();
   
   const formatDate = (dateString) => {
     if (!dateString) return '';
@@ -31,6 +31,24 @@ const TaskCard = ({ task }) => {
   };
   
   const priorityStyle = priorityConfig[task.priority] || priorityConfig.low;
+
+  const handleDragStart = (e) => {
+    e.dataTransfer.setData('taskId', task.id);
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const taskId = e.dataTransfer.getData('taskId');
+    if (taskId !== task.id) {
+      const dropColumnId = task.column;
+      moveTask(taskId, dropColumnId);
+    }
+  };
   
   return (
     <div 
@@ -38,6 +56,9 @@ const TaskCard = ({ task }) => {
         transition-all duration-200 ease-in-out cursor-pointer`}
       onClick={() => setShowDetails(!showDetails)}
       draggable
+      onDragStart={handleDragStart}
+      onDragOver={handleDragOver}
+      onDrop={handleDrop}
     >
       <div className="p-3">
         <div className="flex justify-between items-start gap-2">
@@ -89,7 +110,23 @@ const TaskCard = ({ task }) => {
               </p>
             )}
             
-            <div className="flex justify-end">
+            <div className="flex justify-between items-center">
+              <select
+                onClick={(e) => e.stopPropagation()}
+                onChange={(e) => {
+                  e.stopPropagation();
+                  moveTask(task.id, e.target.value);
+                }}
+                value={task.column}
+                className="text-xs px-2 py-1 border rounded text-gray-600 bg-gray-50"
+              >
+                {columns.map(col => (
+                  <option key={col.id} value={col.id}>
+                    Move to {col.title}
+                  </option>
+                ))}
+              </select>
+              
               <button 
                 onClick={(e) => {
                   e.stopPropagation();

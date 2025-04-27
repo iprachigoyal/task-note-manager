@@ -7,6 +7,10 @@ const useBoardStore = create(
       tasks: [],
       searchFilter: '',
       viewMode: 'grid',
+      filters: {
+        priority: [],
+        status: []
+      },
       columns: [
         { id: 'todo', title: 'To Do', color: 'bg-blue-100' },
         { id: 'inProgress', title: 'In Progress', color: 'bg-yellow-100' },
@@ -18,17 +22,43 @@ const useBoardStore = create(
       setSearchFilter: (query) => set({ searchFilter: query }),
       setViewMode: (mode) => set({ viewMode: mode }),
       
+      setFilters: (filterType, values) => 
+        set((state) => ({
+          filters: {
+            ...state.filters,
+            [filterType]: values
+          }
+        })),
+      
       getFilteredTasks: () => {
         const state = get();
         const searchQuery = state.searchFilter.toLowerCase();
+        let filteredTasks = state.tasks;
         
-        if (!searchQuery) return state.tasks;
+        // Apply search filter
+        if (searchQuery) {
+          filteredTasks = filteredTasks.filter((task) => 
+            task.title.toLowerCase().includes(searchQuery) ||
+            task.description?.toLowerCase().includes(searchQuery) ||
+            task.labels?.some(label => label.toLowerCase().includes(searchQuery))
+          );
+        }
         
-        return state.tasks.filter((task) => 
-          task.title.toLowerCase().includes(searchQuery) ||
-          task.description?.toLowerCase().includes(searchQuery) ||
-          task.labels?.some(label => label.toLowerCase().includes(searchQuery))
-        );
+        // Apply priority filter
+        if (state.filters.priority.length > 0) {
+          filteredTasks = filteredTasks.filter((task) =>
+            state.filters.priority.includes(task.priority)
+          );
+        }
+        
+        // Apply status filter
+        if (state.filters.status.length > 0) {
+          filteredTasks = filteredTasks.filter((task) =>
+            state.filters.status.includes(task.column)
+          );
+        }
+        
+        return filteredTasks;
       },
       
       addTask: (task) => 

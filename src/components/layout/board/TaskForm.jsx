@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import useBoardStore from '../../../store/boardStore';
 
-const TaskForm = ({ task, onClose }) => {
+const TaskForm = ({ task, column, onClose }) => {
   const { addTask, updateTask, columns } = useBoardStore();
   const [formData, setFormData] = useState({
     title: task?.title || '',
@@ -9,7 +9,7 @@ const TaskForm = ({ task, onClose }) => {
     dueDate: task?.dueDate || '',
     priority: task?.priority || 'medium',
     labels: task?.labels?.join(', ') || '',
-    column: task?.column || 'todo',
+    column: task?.column || column || 'todo',
   });
   
   const handleChange = (e) => {
