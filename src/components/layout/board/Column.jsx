@@ -28,8 +28,7 @@ const Column = ({ column, tasks }) => {
   return (
     <>
       <div 
-        className={`flex-1 min-w-[300px] bg-white rounded-xl shadow-sm border border-gray-200
-          flex flex-col transition-all duration-200 ease-in-out`}
+        className="w-full bg-white rounded-xl shadow-sm border border-gray-200 flex flex-col h-[calc(100vh-16rem)]"
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
@@ -64,7 +63,7 @@ const Column = ({ column, tasks }) => {
         </div>
         
         {!isCollapsed && (
-          <div className="flex-grow overflow-y-auto p-3 space-y-2">
+          <div className="flex-1 overflow-y-auto p-3 space-y-2">
             {tasks.length === 0 ? (
               <div className="text-center py-8 text-gray-400 text-sm">
                 Drop tasks here

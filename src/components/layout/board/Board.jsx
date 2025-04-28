@@ -2,6 +2,7 @@ import React from 'react';
 import Column from './Column';
 import ListView from './ListView';
 import CalendarView from './CalendarView';
+import { TimeTrackingSummary } from './TimeTrackingSummary';
 import useBoardStore from '../../../store/boardStore';
 
 const Board = () => {
@@ -9,22 +10,33 @@ const Board = () => {
   const filteredTasks = getFilteredTasks();
   
   if (viewMode === 'calendar') {
-    return <CalendarView />;
+    return (
+      <div className="h-full overflow-y-auto">
+        <div className="p-4 space-y-4">
+          <TimeTrackingSummary tasks={filteredTasks} />
+          <CalendarView />
+        </div>
+      </div>
+    );
   }
 
   if (viewMode === 'list') {
     return (
       <div className="h-full overflow-y-auto">
-        <ListView />
+        <div className="p-4 space-y-4">
+          <TimeTrackingSummary tasks={filteredTasks} />
+          <ListView />
+        </div>
       </div>
     );
   }
   
   // Grid view with previous layout
   return (
-    <div className="flex flex-col h-full w-full bg-gray-50">
-      <div className="flex-grow overflow-x-auto min-h-[calc(100vh-12rem)]">
-        <div className="flex gap-4 h-full p-4 w-full">
+    <div className="h-full overflow-y-auto">
+      <div className="p-4 space-y-4">
+        <TimeTrackingSummary tasks={filteredTasks} />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {columns.map((column) => (
             <Column 
               key={column.id} 

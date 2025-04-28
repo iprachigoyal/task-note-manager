@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
-import { Calendar, Trash2, ChevronDown, ChevronUp } from 'lucide-react';
+import { Calendar, Trash2, ChevronDown, ChevronUp, Clock } from 'lucide-react';
 import useBoardStore from '../../../store/boardStore';
+import { TaskTimeTracker } from './TimeTracker';
+import { useTimeTrackingStore } from '../../../store/timeTrackingStore';
 
 const priorityConfig = {
   low: {
@@ -20,6 +22,8 @@ const priorityConfig = {
 const TaskCard = ({ task }) => {
   const [showDetails, setShowDetails] = useState(false);
   const { deleteTask, moveTask, columns } = useBoardStore();
+  const { isTaskActive } = useTimeTrackingStore();
+  const isTracking = isTaskActive(task.id);
   
   const formatDate = (dateString) => {
     if (!dateString) return '';
@@ -53,7 +57,8 @@ const TaskCard = ({ task }) => {
   return (
     <div 
       className={`bg-white ${priorityStyle.classes} rounded-lg shadow-sm hover:shadow-md 
-        transition-all duration-200 ease-in-out cursor-pointer`}
+        transition-all duration-200 ease-in-out cursor-pointer
+        ${isTracking ? 'ring-2 ring-green-400 ring-opacity-50 animate-pulse' : ''}`}
       onClick={() => setShowDetails(!showDetails)}
       draggable
       onDragStart={handleDragStart}
@@ -63,15 +68,23 @@ const TaskCard = ({ task }) => {
       <div className="p-3">
         <div className="flex justify-between items-start gap-2">
           <h3 className="font-medium text-gray-900 flex-grow">{task.title}</h3>
-          <button 
-            onClick={(e) => {
-              e.stopPropagation();
-              setShowDetails(!showDetails);
-            }}
-            className="text-gray-400 hover:text-gray-600 p-0.5 rounded transition-colors"
-          >
-            {showDetails ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-          </button>
+          <div className="flex items-center gap-2">
+            {isTracking && (
+              <div className="flex items-center gap-1">
+                <Clock size={16} className="text-green-500 animate-spin" />
+                <span className="text-xs font-medium text-green-600">Active</span>
+              </div>
+            )}
+            <button 
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowDetails(!showDetails);
+              }}
+              className="text-gray-400 hover:text-gray-600 p-0.5 rounded transition-colors"
+            >
+              {showDetails ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+            </button>
+          </div>
         </div>
         
         <div className="flex flex-wrap items-center gap-2 mt-2">
@@ -110,7 +123,9 @@ const TaskCard = ({ task }) => {
               </p>
             )}
             
-            <div className="flex justify-between items-center">
+            <TaskTimeTracker taskId={task.id} taskTitle={task.title} />
+            
+            <div className="mt-3 flex justify-between items-center">
               <select
                 onClick={(e) => e.stopPropagation()}
                 onChange={(e) => {
